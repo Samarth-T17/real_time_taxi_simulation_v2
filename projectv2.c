@@ -93,7 +93,7 @@ void printHashMap_location(struct hashMap_location *map)
         while (current != NULL) 
         {
             printf("id: %d\n", current->key);
-            printf("Value - %s\n", current->value);
+            printf("Value - %s\n", current->value->value);
             printf("\n");
             current = current->next;
         }
@@ -108,7 +108,9 @@ struct list
 {
     int n;
     struct my_pair pairs[10];
+    bool possible[10];
     int* landmarks;
+    int n_landmarks;
 };
 
 struct node
@@ -158,8 +160,8 @@ int get_number(char str[100], int* i) {
     return ans;
 }
 
-void take_map_input(int adj_mat[num_locations][num_locations]) 
-{
+void take_map_input(int adj_mat[num_locations][num_locations], struct list* graph[num_locations])
+{    
     for(int i = 0; i < num_locations; i++)
     {
         for(int j = 0; j < num_locations; j++) {
@@ -177,20 +179,22 @@ void take_map_input(int adj_mat[num_locations][num_locations])
     int num;
     int i = 1;
     int edge;
-    char line2[100];
     while (fgets(line, sizeof(line), inputFile) != NULL) 
     {   
         int j = 0;
         int len = strlen(line);
+        graph[i]->n = 0;
         while(j < len) 
         {
             num = get_number(line, &j);
             j++;
             edge = get_number(line, &j);
             j++;
-            //graph[i].pairs[graph[i].n] = {num, edge};
+            graph[i]->pairs[graph[i]->n].first = num;
+            graph[i]->pairs[graph[i]->n].second = edge;
+            graph[i]->possible[graph[i]->n] = true;
             adj_mat[i][num] = edge;
-            //graph[i].n++;
+            graph[i]->n++;
         }
         adj_mat[i][i] = 0;
         i++;
@@ -394,7 +398,7 @@ int partition(struct fleet * fleet, int low, int high)
     struct taxi * temp;
     for(int j = low; j <= high; j++)
     {
-        if(fleet->fleet[j]->rating < pivot)
+        if(fleet->fleet[j]->rating > pivot)
         {
             i++;
             temp = fleet->fleet[i];
@@ -484,13 +488,11 @@ void move_taxi(struct fleet * fleet, struct my_pair floyd[num_locations][num_loc
                 cur_path_locaction->head = NULL;
                 cur_path_locaction->destination = NULL;
                 printf("\nTaxi %d reached destination", cur->taxi_id);
-                printf("lmso");
                 printf("\nFare for passenger %d\n", (cur->fare * 10));
                 printf("\nEnter rating of taxi ID %d : ", cur->taxi_id);
                 scanf("%lf", &rating);
                 cur->rating = (cur->journey_completed * cur->rating + rating) / (cur->journey_completed + 1);
                 cur->journey_completed++;
-                printf("lmso");
                 quickSort(fleet, 0, fleet->num_taxis - 1);
             }
             else 
@@ -582,16 +584,32 @@ void process(struct fleet *fleet, struct my_pair floyd[num_locations][num_locati
         sleep(1); 
     }
 }
+
 int main() 
 {
     int adj_mat[num_locations][num_locations];
-    take_map_input(adj_mat);
-    struct my_pair floyd[num_locations][num_locations];
-    calculate_floyd(adj_mat, floyd);
-    struct hashMap_location map;
-    initializeHashMap_location(&map);
-    take_location_input(&map);
-    struct fleet fleet;
-    fleet.num_taxis = 0;
-    process(&fleet, floyd, &map);
+    struct list* graph[num_locations];
+    for(int i = 0; i < num_locations; i++) {
+        graph[i] = (struct list *) malloc(sizeof(struct list));
+    }
+    take_map_input(adj_mat, graph);
+    for(int i = 0; i < num_locations; i++) {
+        for(int j = 0; j < num_locations; j++) {
+            printf("%d ", adj_mat[i][j]);
+        }
+        printf("\n");
+    }
+    for(int i = 0; i < num_locations; i++) {
+        for(int j = 0; j < graph[i]->n; j++) {
+            printf("\n node %d connected with %d with weight %d", i, graph[i]->pairs[j].first , graph[i]->pairs[j].second);
+        }
+    }
+//    struct my_pair floyd[num_locations][num_locations];
+//    calculate_floyd(adj_mat, floyd);
+//    struct hashMap_location map;
+//    initializeHashMap_location(&map);
+//    take_location_input(&map);
+//    struct fleet fleet;
+//    fleet.num_taxis = 0;
+//    process(&fleet, floyd, &map);
 }

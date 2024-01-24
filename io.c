@@ -601,41 +601,97 @@ void take_passenger_input(struct hashMap_passenger *passengers, char* passenger_
             printf("\nEnter current Location : ");
         }
     }
+    char land_or_loc;
+    double rating;
 
+    char order;
+    printf("\nEnter whether you want to travel to locations of nearest provided landmarks(y, n) : ");
+    scanf("%*c%c", &land_or_loc);
     // Prompt user for cab preferences (rating, number of locations, order of travel)
     printf("\nEnter required cab rating : ");
-    double rating;
     scanf("%lf", &rating);
-
     printf("\nEnter Number of Locations : ");
     scanf("%d", &a);
     int loc_to_process[a + 1];
     loc_to_process[0] = graph_node;
-
-    // Prompt user for each location in the travel route
-    for(int i = 1; i < a + 1; i++)
-    {
-        printf("\nEnter Location %d : ", i - 1);
-        scanf("%*c%s", location);
-        graph_node = search_trie(root, location);
-
-        // Check if the location is valid
-        if(graph_node != -1) 
+    if(land_or_loc == 'y') {
+        // Prompt user for each location in the travel route
+        for(int i = 1; i < a + 1; i++)
         {
-            loc_to_process[i] = graph_node;
+            printf("\nEnter Location %d : ", i);
+            scanf("%*c%s", location);
+            graph_node = search_trie(root, location);
+
+            // Check if the location is valid
+            if(graph_node != -1)
+            {
+                loc_to_process[i] = graph_node;
+            }
+            else
+            {
+                printf("\nNo location in the city with name %s", location);
+                printf("\nEnter Location %d : ", i - 1);
+                i--;
+            }
         }
-        else
-        {
-            printf("\nNo location in the city with name %s", location);
-            printf("\nEnter Location %d : ", i - 1);
-            i--;
-        }
+        // Prompt user for travel order preference
+        printf("\nEnter whether you want to travel in specified order (y, n) : ");
+        scanf("%*c%c", &order);
     }
-
-    // Prompt user for travel order preference
-    char order;
-    printf("\nEnter whether you want to travel in specified order (y, n) : ");
-    scanf("%*c%c", &order);
+//1 saloon
+//2 school
+//3 hospital
+//4 policest
+//5 pool
+//6 playground
+    else
+    {
+        for(int i = 1; i < a + 1; i++)
+        {
+            printf("\nEnter landmark %d : ", i);
+            scanf("%*c%s", location);
+            graph_node = search_trie(root, location);
+            if(location[0] == 'h')
+            {
+                graph_node = 3;
+            }
+            else if(location[0] == 'p')
+            {
+                if(location[1] == 'l')
+                {
+                    graph_node = 6;
+                }
+                else if(location[2] == 'l')
+                {
+                    graph_node = 4;
+                }
+                else if(location[2] == 'o')
+                {
+                    graph_node = 5;
+                }
+            }
+            else if(location[1] == 'a')
+            {
+                graph_node = 1;
+            }
+            else
+            {
+                graph_node = 2;
+            }
+            // Check if the location is valid
+            if(graph_node != -1)
+            {
+                loc_to_process[i] = graph_node;
+            }
+            else
+            {
+                printf("\nNo location in the city with name %s", location);
+                printf("\nEnter Location %d : ", i - 1);
+                i--;
+            }
+        }
+        order = 'l';
+    }
 
     // Open file to write user details
     FILE *filePointer;
@@ -716,7 +772,7 @@ void convert_int_to_string(char * string, int n)
 // Input param:  map - pointer to the hashMap_passenger structure
 // Return Type:  void
 void printHashMap_passenger(struct hashMap_passenger *map)
- {
+{
     // Check if the hash map is NULL
     if (map == NULL) {
         printf("HashMap is NULL\n");
@@ -810,12 +866,10 @@ void take_taxi_input_file(struct hashMap_taxi* taxi)
         perror("Error opening file");
         return;
     }
-
     // Variables to store taxi information
     int taxi_id;
     int jc;
     double taxi_rating;
-
     // Loop through the file and insert taxi information into the hashMap_taxi structure
     while (fscanf(inputFile, "%d %d %lf", &taxi_id, &jc, &taxi_rating) != EOF) 
     {
